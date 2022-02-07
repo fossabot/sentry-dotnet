@@ -11,7 +11,7 @@ namespace Sentry.Internal.Extensions
     {
         // The Json options with a preset of rules that will remove dangerous and problematic
         // data from the serialized object.
-        private static JsonSerializerOptions serializerOption = new() { Converters = { new SentryJsonConverter() } };
+        private static readonly JsonSerializerOptions serializerOption = new() { Converters = { new SentryJsonConverter() } };
 
         public static void Deconstruct(this JsonProperty jsonProperty, out string name, out JsonElement value)
         {
@@ -414,7 +414,7 @@ namespace Sentry.Internal.Extensions
             IDiagnosticLogger? logger)
         {
             var asDictionary = dic as IReadOnlyDictionary<string, object?> ?? dic?.ToDictionary();
-            if (asDictionary is not null && asDictionary.Count > 0)
+            if (asDictionary?.Count > 0)
             {
                 writer.WriteDictionary(propertyName, asDictionary, logger);
             }
@@ -426,7 +426,7 @@ namespace Sentry.Internal.Extensions
             IEnumerable<KeyValuePair<string, string?>>? dic)
         {
             var asDictionary = dic as IReadOnlyDictionary<string, string?> ?? dic?.ToDictionary();
-            if (asDictionary is not null && asDictionary.Count > 0)
+            if (asDictionary?.Count > 0)
             {
                 writer.WriteStringDictionary(propertyName, asDictionary);
             }
@@ -439,7 +439,7 @@ namespace Sentry.Internal.Extensions
             IDiagnosticLogger? logger)
         {
             var asList = arr as IReadOnlyList<object?> ?? arr?.ToArray();
-            if (asList is not null && asList.Count > 0)
+            if (asList?.Count > 0)
             {
                 writer.WriteArray(propertyName, asList, logger);
             }
@@ -451,7 +451,7 @@ namespace Sentry.Internal.Extensions
             IEnumerable<string?>? arr)
         {
             var asList = arr as IReadOnlyList<string?> ?? arr?.ToArray();
-            if (asList is not null && asList.Count > 0)
+            if (asList?.Count > 0)
             {
                 writer.WriteStringArray(propertyName, asList);
             }
