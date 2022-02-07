@@ -55,7 +55,7 @@ namespace Sentry
         public void UnsetTag(string key) =>
             (_tags ??= new ConcurrentDictionary<string, string>()).TryRemove(key, out _);
 
-        private ConcurrentDictionary<string, object?> _data = new();
+        private readonly ConcurrentDictionary<string, object?> _data = new();
 
         /// <inheritdoc />
         public IReadOnlyDictionary<string, object?> Extra => _data;

@@ -40,9 +40,9 @@ namespace Sentry.Internals.DiagnosticSource
         private IHub _hub { get; }
         private SentryOptions _options { get; }
 
-        private AsyncLocal<WeakReference<ISpan>> _spansCompilerLocal = new();
-        private AsyncLocal<WeakReference<ISpan>> _spansQueryLocal = new();
-        private AsyncLocal<WeakReference<ISpan>> _spansConnectionLocal = new();
+        private readonly AsyncLocal<WeakReference<ISpan>> _spansCompilerLocal = new();
+        private readonly AsyncLocal<WeakReference<ISpan>> _spansQueryLocal = new();
+        private readonly AsyncLocal<WeakReference<ISpan>> _spansConnectionLocal = new();
 
         private bool _logConnectionEnabled = true;
         private bool _logQueryEnabled = true;
