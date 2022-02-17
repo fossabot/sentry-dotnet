@@ -19,7 +19,10 @@ namespace Sentry.Protocol.Envelopes
         /// <summary>
         /// Initializes an instance of <see cref="StreamSerializable"/>.
         /// </summary>
-        public StreamSerializable(Stream source) => Source = source;
+        public StreamSerializable(Stream source)
+        {
+            Source = source;
+        }
 
         /// <inheritdoc />
         public async Task SerializeAsync(Stream stream, IDiagnosticLogger? logger, CancellationToken cancellationToken = default) =>

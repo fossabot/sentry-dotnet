@@ -47,6 +47,17 @@ namespace Sentry.Internal
             _length = length;
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+        }
+#if !NET461 && !NETSTANDARD2_0
+        public override ValueTask DisposeAsync()
+        {
+            return base.DisposeAsync();
+        }
+#endif
+
         public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             // Make sure we don't read beyond allowed range
