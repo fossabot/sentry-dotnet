@@ -243,15 +243,19 @@ namespace Sentry.Protocol.Envelopes
             Stream stream,
             CancellationToken cancellationToken = default)
         {
+            Console.WriteLine("Deserializing header");
             var header = await DeserializeHeaderAsync(stream, cancellationToken).ConfigureAwait(false);
 
+            Console.WriteLine("Deserializing items");
             var items = new List<EnvelopeItem>();
             while (stream.Position < stream.Length)
             {
+                Console.WriteLine("Attempting to deserialize envelope items");
                 var item = await EnvelopeItem.DeserializeAsync(stream, cancellationToken).ConfigureAwait(false);
                 items.Add(item);
             }
 
+            Console.WriteLine("Returning new envelope");
             return new Envelope(header, items);
         }
     }

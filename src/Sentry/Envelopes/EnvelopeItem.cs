@@ -295,14 +295,18 @@ namespace Sentry.Protocol.Envelopes
             IReadOnlyDictionary<string, object?> header,
             CancellationToken cancellationToken = default)
         {
+            Console.WriteLine("Attempting to deserialize envelope item payload.");
+
             var payloadLength = header.GetValueOrDefault(LengthKey) switch
             {
                 null => (long?)null,
                 var value => Convert.ToInt64(value)
             };
 
+            Console.WriteLine("Payload type");
             var payloadType = header.GetValueOrDefault(TypeKey) as string;
 
+            Console.WriteLine("Event");
             // Event
             if (string.Equals(payloadType, TypeValueEvent, StringComparison.OrdinalIgnoreCase))
             {
@@ -313,6 +317,7 @@ namespace Sentry.Protocol.Envelopes
                 return new JsonSerializable(SentryEvent.FromJson(json));
             }
 
+            Console.WriteLine("User report");
             // User report
             if (string.Equals(payloadType, TypeValueUserReport, StringComparison.OrdinalIgnoreCase))
             {
@@ -323,6 +328,7 @@ namespace Sentry.Protocol.Envelopes
                 return new JsonSerializable(UserFeedback.FromJson(json));
             }
 
+            Console.WriteLine("Transaction");
             // Transaction
             if (string.Equals(payloadType, TypeValueTransaction, StringComparison.OrdinalIgnoreCase))
             {
@@ -333,16 +339,29 @@ namespace Sentry.Protocol.Envelopes
                 return new JsonSerializable(Transaction.FromJson(json));
             }
 
+            Console.WriteLine("Session");
             // Session
             if (string.Equals(payloadType, TypeValueSession, StringComparison.OrdinalIgnoreCase))
             {
                 var bufferLength = (int)(payloadLength ?? stream.Length);
+                Console.WriteLine("reading bytes chunk");
                 var buffer = await stream.ReadByteChunkAsync(bufferLength, cancellationToken).ConfigureAwait(false);
+                Console.WriteLine($"Buffer length: {buffer.Length}");
+
+                var memStream = new MemoryStream(buffer);
+                memStream.Seek(0, SeekOrigin.Begin);
+                var reader = new StreamReader(memStream);
+                var content = reader.ReadToEnd();
+                Console.WriteLine($"Content: {content}");
+
+                Console.WriteLine("putting the buffer into json");
                 var json = Json.Parse(buffer);
 
+                Console.WriteLine("Returning json serializable");
                 return new JsonSerializable(SessionUpdate.FromJson(json));
             }
 
+            Console.WriteLine("Arbitrary payload");
             // Arbitrary payload
             var payloadStream = new PartialStream(stream, stream.Position, payloadLength);
 
@@ -355,6 +374,7 @@ namespace Sentry.Protocol.Envelopes
                 stream.Seek(0, SeekOrigin.End);
             }
 
+            Console.WriteLine("Returning new StreamSerializable");
             return new StreamSerializable(payloadStream);
         }
 
@@ -365,9 +385,12 @@ namespace Sentry.Protocol.Envelopes
             Stream stream,
             CancellationToken cancellationToken = default)
         {
+            Console.WriteLine("Envelope item header.");
             var header = await DeserializeHeaderAsync(stream, cancellationToken).ConfigureAwait(false);
+            Console.WriteLine("Envelope item payload.");
             var payload = await DeserializePayloadAsync(stream, header, cancellationToken).ConfigureAwait(false);
 
+            Console.WriteLine("Swallowing newlines.");
             // Swallow trailing newlines (some envelopes may have them after payloads)
             await foreach (var curByte in stream.ReadAllBytesAsync(cancellationToken).ConfigureAwait(false))
             {
@@ -378,6 +401,7 @@ namespace Sentry.Protocol.Envelopes
                 }
             }
 
+            Console.WriteLine("Returning Envelope Item.");
             return new EnvelopeItem(header, payload);
         }
     }

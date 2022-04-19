@@ -168,6 +168,46 @@ namespace Sentry.Internal.Http
             }
         }
 
+        private async Task<Envelope> DeserializeAsync(Stream stream, CancellationToken cancellation)
+        {
+            try
+            {
+                _options.LogDebug("Attempting to deserialize envelope.");
+                _options.LogDebug("Delay.");
+                await Task.Delay(500, _workerCts.Token).ConfigureAwait(false);
+                _options.LogDebug("Delay done.");
+                return await Envelope.DeserializeAsync(stream, cancellation).ConfigureAwait(false);
+            }
+            catch (Exception e)
+            {
+                _options.LogDebug("Deserialization failed.");
+
+                e.Data["bytes"] = stream.Length;
+                e.Data["position"] = stream.Position;
+
+                if (stream.Length > 0)
+                {
+                    _options.LogDebug("Stream length greater 0: Attempting to read.");
+
+                    stream.Seek(0, SeekOrigin.Begin);
+
+                    var memStream = new MemoryStream();
+                    stream.CopyTo(memStream);
+                    memStream.Seek(0, SeekOrigin.Begin);
+
+                    _options.LogDebug("Capacity = {0}, Length = {1}",
+                        memStream.Capacity.ToString(),
+                        memStream.Length.ToString());
+
+                    var reader = new StreamReader(memStream);
+                    var content = reader.ReadToEnd();
+                    _options.LogDebug("Content: {0}", content);
+                }
+
+                throw;
+            }
+        }
+
         private async Task InnerProcessCacheAsync(string file, CancellationToken cancellation)
         {
             _options.LogDebug("Reading cached envelope: {0}", file);
@@ -178,7 +218,8 @@ namespace Sentry.Internal.Http
 #else
             await using (stream.ConfigureAwait(false))
 #endif
-            using (var envelope = await Envelope.DeserializeAsync(stream, cancellation).ConfigureAwait(false))
+
+            using (var envelope = await DeserializeAsync(stream, cancellation).ConfigureAwait(false))
             {
                 try
                 {
@@ -225,6 +266,7 @@ namespace Sentry.Internal.Http
             }
             catch
             {
+                //
             }
 
             if (envelopeContents == null)
